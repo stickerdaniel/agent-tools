@@ -144,11 +144,15 @@ const BAD_FETCH_PORTS = new Set([
  * Find an unused port synchronously, starting from a given port.
  * Useful for Vite plugin initialization where async is not allowed.
  * Skips ports the fetch spec blocks, so the chosen port stays reachable.
+ * Blocked ports do not count toward maxAttempts, so the limit always
+ * reflects how many connectable ports were actually probed.
  */
 export function findUnusedPortSync(startPort = 10000, maxAttempts = 100): number {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const port = startPort + attempt;
+  let checked = 0;
+  for (let offset = 0; checked < maxAttempts; offset++) {
+    const port = startPort + offset;
     if (BAD_FETCH_PORTS.has(port)) continue;
+    checked++;
     if (isPortAvailableSync(port)) {
       return port;
     }
